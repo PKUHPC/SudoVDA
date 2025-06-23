@@ -1620,6 +1620,7 @@ VOID SudoVDAIoDeviceControl(
 		output->Timeout = watchdogTimeout;
 		output->Countdown = watchdogCountdown;
 		bytesReturned = sizeof(VIRTUAL_DISPLAY_GET_WATCHDOG_OUT);
+		break;
 	}
 	case IOCTL_DRIVER_PING: {
 		Status = STATUS_SUCCESS;
@@ -1636,6 +1637,7 @@ VOID SudoVDAIoDeviceControl(
 
 		output->Version = VDAProtocolVersion;
 		bytesReturned = sizeof(VIRTUAL_DISPLAY_GET_PROTOCOL_VERSION_OUT);
+		break;
 	}
 	default:
 		break;
