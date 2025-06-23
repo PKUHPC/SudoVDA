@@ -1639,6 +1639,12 @@ VOID SudoVDAIoDeviceControl(
 		bytesReturned = sizeof(VIRTUAL_DISPLAY_GET_PROTOCOL_VERSION_OUT);
 		break;
 	}
+	case IOCTL_REMOVE_ALL_VIRTUAL_DISPLAY: {
+		//std::lock_guard<std::mutex> lg(monitorListOp);
+		DisconnectAllMonitors();
+		Status = STATUS_SUCCESS;
+		break;
+	}
 	default:
 		break;
 	}
