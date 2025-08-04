@@ -62,11 +62,11 @@ static const UINT mode_scale_factors[] = {
 
 // Default modes reported for edid-less monitors. The second mode is set as preferred
 static const struct VirtualMonitorMode s_DefaultModes[] = {
-	{640, 480, 30000}, {640, 480, 60000},                 {640, 480, 144000},
+	//{640, 480, 30000}, {640, 480, 60000},                 {640, 480, 144000},
 	//{720, 1600, 30000}, {720, 1600, 60000},                 {720, 1600, 144000},
 	//{800, 480, 30000}, {800, 480, 60000},                   {800, 480, 144000},
 	{800, 600, 30000}, {800, 600, 60000},                   {800, 600, 144000},
-	{854, 480, 30000}, {854, 480, 60000},                   {854, 480, 144000},
+	//{854, 480, 30000}, {854, 480, 60000},                   {854, 480, 144000},
 	{960, 540, 30000}, {960, 540, 60000},                   {960, 540, 144000},
 	{1024, 576, 30000}, {1024, 576, 60000},               {1024, 576, 144000},
 	/*{1024, 600, 30000}, {1024, 600, 60000},               {1024, 600, 144000},
@@ -90,6 +90,9 @@ static const struct VirtualMonitorMode s_DefaultModes[] = {
 	{1600, 1200, 30000}, {1600, 1200, 60000},               {1600, 1200, 144000},
 	{1680, 900, 30000}, {1680, 900, 60000},                 {1680, 900, 144000},
 	{1680, 1050, 30000}, {1680, 1050, 60000},               {1680, 1050, 144000},
+
+	{1728, 1079, 30000}, {1728, 1079, 60000},               {1728, 1079, 144000},
+
 	{1920, 950, 30000}, {1920, 950, 60000},                 {1920, 950, 144000},
 	{1920, 1080, 30000}, {1920, 1080, 60000},               {1920, 1080, 144000},
 	{1920, 1200, 30000}, {1920, 1200, 60000},               {1920, 1200, 144000},
@@ -101,7 +104,13 @@ static const struct VirtualMonitorMode s_DefaultModes[] = {
 	{2560, 1600, 30000}, {2560, 1600, 60000},               {2560, 1600, 144000},
 	{2688, 1242, 30000}, {2688, 1242, 60000},               {2688, 1242, 144000},
 	{3200, 1800, 30000}, {3200, 1800, 60000},               {3200, 1800, 144000},
-	{3440, 1440, 30000}, {3440, 1440, 60000},               {3440, 1440, 144000},
+	//{3440, 1440, 30000}, {3440, 1440, 60000},               {3440, 1440, 144000},
+
+	{3456, 2158, 30000}, {3456, 2158, 60000},               {3456, 2158, 144000},
+
+	//{3600, 1898, 30000}, {3600, 1898, 60000},               {3600, 1898, 144000},
+	//{3600, 2160, 30000}, {3600, 2160, 60000},               {3600, 2160, 144000},
+
 	{3840, 1600, 30000}, {3840, 1600, 60000},               {3840, 1600, 144000},
 	{3840, 2160, 30000}, {3840, 2160, 60000},               {3840, 2160, 144000},
 	//{3840, 2400, 30000}, {3840, 2400, 60000},             {3840, 2400, 144000},
@@ -128,10 +137,12 @@ static inline void FillSignalInfo(DISPLAYCONFIG_VIDEO_SIGNAL_INFO& Mode, DWORD W
 		if (VSync < 1000) {
 			VSync *= 1000;
 		}
-	} else {
+	}
+	else {
 		if (VSync % 1000 > 500) {
 			VSync = (VSync / 1000) + 1;
-		} else {
+		}
+		else {
 			VSync /= 1000;
 		}
 		Denominator = 1;
@@ -144,7 +155,7 @@ static inline void FillSignalInfo(DISPLAYCONFIG_VIDEO_SIGNAL_INFO& Mode, DWORD W
 
 	Mode.scanLineOrdering = DISPLAYCONFIG_SCANLINE_ORDERING_PROGRESSIVE;
 
-	Mode.pixelRate = ((UINT64) VSync) * ((UINT64) Width) * ((UINT64) Height) / Denominator;
+	Mode.pixelRate = ((UINT64)VSync) * ((UINT64)Width) * ((UINT64)Height) / Denominator;
 }
 
 static IDDCX_MONITOR_MODE CreateIddCxMonitorMode(DWORD Width, DWORD Height, DWORD VSync, IDDCX_MONITOR_MODE_ORIGIN Origin = IDDCX_MONITOR_MODE_ORIGIN_DRIVER)
@@ -346,7 +357,7 @@ void DisconnectAllMonitors() {
 void RunWatchdog() {
 	if (watchdogTimeout) {
 		watchdogCountdown = watchdogTimeout;
-		watchdogThread = std::thread([]{
+		watchdogThread = std::thread([] {
 			for (;;) {
 				if (watchdogTimeout) {
 					Sleep(1000);
@@ -360,12 +371,13 @@ void RunWatchdog() {
 					if (!watchdogCountdown) {
 						DisconnectAllMonitors();
 					}
-				} else {
+				}
+				else {
 					DisconnectAllMonitors();
 					return;
 				}
 			}
-		});
+			});
 	}
 }
 
@@ -411,7 +423,8 @@ void SudoVDADriverUnload(_In_ WDFDRIVER) {
 	if (watchdogTimeout > 0) {
 		watchdogTimeout = 0;
 		watchdogThread.join();
-	} else {
+	}
+	else {
 		DisconnectAllMonitors();
 	}
 }
@@ -459,7 +472,8 @@ NTSTATUS SudoVDADeviceAdd(WDFDRIVER Driver, PWDFDEVICE_INIT pDeviceInit)
 		IddConfig.EvtIddCxMonitorQueryTargetModes2 = SudoVDAMonitorQueryModes2;
 		IddConfig.EvtIddCxAdapterCommitModes2 = SudoVDAAdapterCommitModes2;
 		IddConfig.EvtIddCxMonitorSetGammaRamp = SudoVDAMonitorSetGammaRamp;
-	} else {
+	}
+	else {
 		IddConfig.EvtIddCxParseMonitorDescription = SudoVDAParseMonitorDescription;
 		IddConfig.EvtIddCxMonitorQueryTargetModes = SudoVDAMonitorQueryModes;
 		IddConfig.EvtIddCxAdapterCommitModes = SudoVDAAdapterCommitModes;
@@ -474,14 +488,14 @@ NTSTATUS SudoVDADeviceAdd(WDFDRIVER Driver, PWDFDEVICE_INIT pDeviceInit)
 	WDF_OBJECT_ATTRIBUTES Attr;
 	WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&Attr, IndirectDeviceContextWrapper);
 	Attr.EvtCleanupCallback = [](WDFOBJECT Object)
-	{
-		// Automatically cleanup the context when the WDF object is about to be deleted
-		auto* pContext = WdfObjectGet_IndirectDeviceContextWrapper(Object);
-		if (pContext)
 		{
-			pContext->Cleanup();
-		}
-	};
+			// Automatically cleanup the context when the WDF object is about to be deleted
+			auto* pContext = WdfObjectGet_IndirectDeviceContextWrapper(Object);
+			if (pContext)
+			{
+				pContext->Cleanup();
+			}
+		};
 
 	WDFDEVICE Device = nullptr;
 	Status = WdfDeviceCreate(&pDeviceInit, &Attr, &Device);
@@ -658,7 +672,7 @@ void SwapChainProcessor::RunCore()
 		if (hr == E_PENDING)
 		{
 			// We must wait for a new buffer
-			HANDLE WaitHandles [] =
+			HANDLE WaitHandles[] =
 			{
 				m_hAvailableBufferEvent,
 				m_hTerminateEvent.Get()
@@ -805,7 +819,7 @@ void IndirectDeviceContext::InitAdapter()
 }
 
 void IndirectDeviceContext::SetRenderAdapter(const LUID& AdapterLuid) {
-	IDARG_IN_ADAPTERSETRENDERADAPTER inArgs{AdapterLuid};
+	IDARG_IN_ADAPTERSETRENDERADAPTER inArgs{ AdapterLuid };
 	IddCxAdapterSetRenderAdapter(m_Adapter, &inArgs);
 }
 
@@ -861,7 +875,8 @@ NTSTATUS IndirectDeviceContext::CreateMonitor(IndirectMonitorContext*& pMonitorC
 			pMonitorContext->adapterLuid = ArrivalOut.OsAdapterLuid;
 			pMonitorContext->targetId = ArrivalOut.OsTargetId;
 		}
-	} else {
+	}
+	else {
 		// Avoid memory leak
 		free(edidData);
 	}
@@ -964,7 +979,7 @@ void IndirectDeviceContext::_TestCreateMonitor() {
 	CoCreateGuid(&containerId);
 	uint8_t* edidData = generate_edid(containerId.Data1, serialStr.c_str(), dispName.c_str());
 
-	VirtualMonitorMode mode{3000 + (DWORD)connectorIndex * 2, 2120 + (DWORD)connectorIndex, 120 + (DWORD)connectorIndex};
+	VirtualMonitorMode mode{ 3000 + (DWORD)connectorIndex * 2, 2120 + (DWORD)connectorIndex, 120 + (DWORD)connectorIndex };
 
 	IndirectMonitorContext* pContext;
 	CreateMonitor(pContext, edidData, containerId, mode);
@@ -978,7 +993,7 @@ NTSTATUS SudoVDAAdapterInitFinished(IDDCX_ADAPTER AdapterObject, const IDARG_IN_
 
 	if (NT_SUCCESS(pInArgs->AdapterInitStatus)) {
 		if (preferredAdapterChanged) {
-			IDARG_IN_ADAPTERSETRENDERADAPTER inArgs{preferredAdapterLuid};
+			IDARG_IN_ADAPTERSETRENDERADAPTER inArgs{ preferredAdapterLuid };
 			IddCxAdapterSetRenderAdapter(AdapterObject, &inArgs);
 			preferredAdapterChanged = false;
 		}
@@ -1042,7 +1057,7 @@ NTSTATUS SudoVDAParseMonitorDescription(const IDARG_IN_PARSEMONITORDESCRIPTION* 
 
 	VirtualMonitorMode* pPreferredMode = nullptr;
 
-	for (auto &it: monitorCtxList) {
+	for (auto& it : monitorCtxList) {
 		if (memcmp(pInArgs->MonitorDescription.pData, it->pEdidData, sizeof(edid_base)) == 0) {
 			if (it->preferredMode.Width) {
 				// We're adding 10 different modes, 1 original and 4 scaled x doubled refresh rate
@@ -1109,7 +1124,8 @@ NTSTATUS SudoVDAParseMonitorDescription(const IDARG_IN_PARSEMONITORDESCRIPTION* 
 			}
 
 			pOutArgs->PreferredMonitorModeIdx = std::size(s_DefaultModes);
-		} else {
+		}
+		else {
 			pOutArgs->PreferredMonitorModeIdx = 1;
 		}
 
@@ -1130,7 +1146,7 @@ NTSTATUS SudoVDAParseMonitorDescription2(
 
 	VirtualMonitorMode* pPreferredMode = nullptr;
 
-	for (auto &it: monitorCtxList) {
+	for (auto& it : monitorCtxList) {
 		if (memcmp(pInArgs->MonitorDescription.pData, it->pEdidData, sizeof(edid_base)) == 0) {
 			if (it->preferredMode.Width) {
 				// We're adding 10 different modes, 1 original and 4 scaled x doubled refresh rate
@@ -1197,7 +1213,8 @@ NTSTATUS SudoVDAParseMonitorDescription2(
 			}
 
 			pOutArgs->PreferredMonitorModeIdx = std::size(s_DefaultModes);
-		} else {
+		}
+		else {
 			pOutArgs->PreferredMonitorModeIdx = 1;
 		}
 
@@ -1222,7 +1239,8 @@ NTSTATUS SudoVDAMonitorGetDefaultModes(IDDCX_MONITOR MonitorObject, const IDARG_
 
 	if (pInArgs->DefaultMonitorModeBufferInputCount == 0) {
 		return STATUS_SUCCESS;
-	} else if (pInArgs->DefaultMonitorModeBufferInputCount < pOutArgs->DefaultMonitorModeBufferOutputCount) {
+	}
+	else if (pInArgs->DefaultMonitorModeBufferInputCount < pOutArgs->DefaultMonitorModeBufferOutputCount) {
 		return STATUS_BUFFER_TOO_SMALL;
 	}
 
@@ -1243,7 +1261,7 @@ NTSTATUS SudoVDAMonitorQueryModes(IDDCX_MONITOR MonitorObject, const IDARG_IN_QU
 {
 	UNREFERENCED_PARAMETER(MonitorObject);
 
-	pOutArgs->TargetModeBufferOutputCount = (UINT) std::size(s_DefaultModes);
+	pOutArgs->TargetModeBufferOutputCount = (UINT)std::size(s_DefaultModes);
 	auto* pMonitorContextWrapper = WdfObjectGet_IndirectMonitorContextWrapper(MonitorObject);
 	if (pMonitorContextWrapper->pContext->preferredMode.Width) {
 		pOutArgs->TargetModeBufferOutputCount += std::size(mode_scale_factors) * 2;
@@ -1301,7 +1319,8 @@ NTSTATUS SudoVDAMonitorQueryModes(IDDCX_MONITOR MonitorObject, const IDARG_IN_QU
 		}
 
 		copy(TargetModes.begin(), TargetModes.end(), pInArgs->pTargetModes);
-	} else if (pInArgs->TargetModeBufferInputCount != 0) {
+	}
+	else if (pInArgs->TargetModeBufferInputCount != 0) {
 		return STATUS_BUFFER_TOO_SMALL;
 	}
 
@@ -1313,7 +1332,7 @@ NTSTATUS SudoVDAMonitorQueryModes2(IDDCX_MONITOR MonitorObject, const IDARG_IN_Q
 {
 	UNREFERENCED_PARAMETER(MonitorObject);
 
-	pOutArgs->TargetModeBufferOutputCount = (UINT) std::size(s_DefaultModes);
+	pOutArgs->TargetModeBufferOutputCount = (UINT)std::size(s_DefaultModes);
 
 	auto* pMonitorContextWrapper = WdfObjectGet_IndirectMonitorContextWrapper(MonitorObject);
 
@@ -1369,7 +1388,8 @@ NTSTATUS SudoVDAMonitorQueryModes2(IDDCX_MONITOR MonitorObject, const IDARG_IN_Q
 		}
 
 		copy(TargetModes.begin(), TargetModes.end(), pInArgs->pTargetModes);
-	} else if (pInArgs->TargetModeBufferInputCount != 0) {
+	}
+	else if (pInArgs->TargetModeBufferInputCount != 0) {
 		return STATUS_BUFFER_TOO_SMALL;
 	}
 
@@ -1383,7 +1403,7 @@ NTSTATUS SudoVDAMonitorAssignSwapChain(IDDCX_MONITOR MonitorObject, const IDARG_
 
 	if (preferredAdapterChanged) {
 		if (memcmp(&pInArgs->RenderAdapterLuid, &preferredAdapterLuid, sizeof(LUID))) {
-			IDARG_IN_ADAPTERSETRENDERADAPTER inArgs{preferredAdapterLuid};
+			IDARG_IN_ADAPTERSETRENDERADAPTER inArgs{ preferredAdapterLuid };
 			IddCxAdapterSetRenderAdapter(pMonitorContextWrapper->pContext->m_Adapter, &inArgs);
 			return STATUS_GRAPHICS_INDIRECT_DISPLAY_ABANDON_SWAPCHAIN;
 		}
@@ -1509,7 +1529,7 @@ VOID SudoVDAIoDeviceControl(
 
 			IndirectMonitorContext* pMonitorContext;
 			uint8_t* edidData = generate_edid(params->MonitorGuid.Data1, params->SerialNumber, params->DeviceName);
-			VirtualMonitorMode preferredMode = {params->Width, params->Height, params->RefreshRate};
+			VirtualMonitorMode preferredMode = { params->Width, params->Height, params->RefreshRate };
 			if (preferredMode.VSync < 1000) {
 				preferredMode.VSync *= 1000;
 			}
@@ -1589,7 +1609,35 @@ VOID SudoVDAIoDeviceControl(
 		break;
 	}
 	case IOCTL_DRIVER_PING: {
-		Status = STATUS_SUCCESS;
+		if (InputBufferLength < sizeof(VIRTUAL_DISPLAY_REMOVE_PARAMS)) {
+			Status = STATUS_BUFFER_TOO_SMALL;
+			break;
+		}
+
+		PVIRTUAL_DISPLAY_REMOVE_PARAMS params;
+		Status = WdfRequestRetrieveInputBuffer(Request, sizeof(VIRTUAL_DISPLAY_REMOVE_PARAMS), (PVOID*)&params, NULL);
+		if (!NT_SUCCESS(Status)) {
+			break;
+		}
+
+		if (params->MonitorGuid == GUID_NULL) {
+			// If the GUID is null, we assume it's a ping request
+			Status = STATUS_SUCCESS;
+			break;
+		}
+
+		Status = STATUS_NOT_FOUND;
+
+		std::lock_guard<std::mutex> lg(monitorListOp);
+
+		for (auto it = monitorCtxList.begin(); it != monitorCtxList.end(); ++it) {
+			auto* ctx = *it;
+			if (ctx->monitorGuid == params->MonitorGuid) {
+				Status = STATUS_SUCCESS;
+				break;
+			}
+		}
+
 		break;
 	}
 	case IOCTL_GET_PROTOCOL_VERSION: {
